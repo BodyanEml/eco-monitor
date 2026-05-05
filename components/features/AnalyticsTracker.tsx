@@ -7,8 +7,11 @@ export default function AnalyticsTracker({ eventName, payload }: { eventName?: s
   const pathname = usePathname();
 
   useEffect(() => {
+    // Перевіряємо, чи ми на сторінці конкретної станції
+    const isStationRoute = pathname.includes('/stations/') && pathname !== '/stations/';
+
     // Визначаємо групу контенту на основі URL
-    const contentGroup = pathname.includes('/stations/') ? 'Station Details' :
+    const contentGroup = isStationRoute ? 'Station Details' :
                          pathname.includes('/guide') ? 'User Guide' :
                          pathname.includes('/about') ? 'About Project' : 'Dashboard';
 
@@ -19,7 +22,17 @@ export default function AnalyticsTracker({ eventName, payload }: { eventName?: s
       content_group: contentGroup 
     });
 
-    // Якщо передано кастомну подію (наприклад, перегляд деталей)
+    // ТРЕКІНГ: Перегляд деталей моніторингової станції
+    if (isStationRoute) {
+      // Дістаємо ID станції з кінця URL (наприклад, "2" з "/stations/2")
+      const stationId = pathname.split('/').pop();
+      sendGAEvent({ 
+        event: 'view_station_details', 
+        station_id: stationId 
+      });
+    }
+
+    // Якщо передано кастомну подію (наприклад, з інших компонентів)
     if (eventName) {
       sendGAEvent({ event: eventName, ...payload });
     }

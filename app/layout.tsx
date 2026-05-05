@@ -89,8 +89,8 @@ export default function RootLayout({
           </div>
         </footer>
 
-        {/* 5. GOOGLE ANALYTICS SCRIPT */}
-        <GoogleAnalytics gaId="G-ECOMONITOR2026" />
+        {/* 5. GOOGLE ANALYTICS SCRIPT - прибрано зайвий пробіл в gaId */}
+        <GoogleAnalytics gaId="G-8QSXEDTT6S" />
 
       </body>
     </html>

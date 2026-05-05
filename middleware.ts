@@ -12,15 +12,6 @@ export function middleware(request: NextRequest) {
   // Логуємо після завершення обробки запиту
   const duration = (performance.now() - startTime).toFixed(2);
   
-  logger.info({
-    requestId,
-    method: request.method,
-    url: request.nextUrl.pathname,
-    status: response.status,
-    duration: `${duration}ms`,
-    userAgent: request.headers.get('user-agent'),
-    ip: request.ip || '127.0.0.1',
-  }, 'HTTP Request processed');
 
   return response;
 }

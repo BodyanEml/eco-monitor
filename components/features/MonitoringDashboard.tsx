@@ -1,12 +1,20 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Station, AirQualityIndicators, Measurement } from "@/types/environmental";
-import Map from "./Map";
-import HomeCharts from "./HomeCharts";
-import PollutantChart from "./PollutantChart";
+import MapWrapper from "./MapWrapper"; // ЗМІНЕНО: Використовуємо обгортку замість прямого імпорту Map
 import { logger } from "@/lib/logger";
 import { sendGAEvent } from "@next/third-parties/google";
+
+// ДИНАМІЧНІ ІМПОРТИ ГРАФІКІВ (Lazy Loading)
+const HomeCharts = dynamic(() => import("./HomeCharts"), {
+  loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-3xl border border-slate-100" />
+});
+
+const PollutantChart = dynamic(() => import("./PollutantChart"), {
+  loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-3xl border border-slate-100" />
+});
 
 interface DashboardProps {
   stations: Station[];
@@ -22,14 +30,13 @@ export default function MonitoringDashboard({
   // 1. Стан обраної станції
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
 
-  // 2. Безпечна перевірка вхідних даних (Частина 3: Обробка помилок)
+  // 2. Безпечна перевірка вхідних даних
   useEffect(() => {
     if (!stations || stations.length === 0) {
-      logger.warn({ component: "MonitoringDashboard" }, "Компонент отримав порожній список станцій");
     }
   }, [stations]);
 
-  // 3. Мемоїзація даних для оптимізації та уникнення зайвих рендерів
+  // 3. Мемоїзація даних
   const selectedStation = useMemo(() => 
     stations.find(s => s.id === selectedStationId), 
   [selectedStationId, stations]);
@@ -38,18 +45,17 @@ export default function MonitoringDashboard({
     allMeasurements.filter(m => m.stationId === selectedStationId),
   [selectedStationId, allMeasurements]);
 
-  // 4. Обробник вибору станції з логуванням (Частина 2: Рівні логування)
+  // 4. Обробник вибору станції (Діє як фільтр)
   const handleStationSelect = (id: string) => {
     if (id === selectedStationId) return;
 
     setSelectedStationId(id);
     
-    // Логування для розробника (Debug/Info)
-    logger.info({ stationId: id }, `Користувач обрав станцію для детального аналізу`);
     
-    // Відстеження в Google Analytics (Частина 1: Кастомні події)
+    // ТРЕКІНГ: Застосування фільтра (вибір станції)
     sendGAEvent({ 
-      event: 'station_selected_on_dashboard', 
+      event: 'filter_applied', 
+      filter_type: 'station_selection',
       station_id: id 
     });
   };
@@ -57,11 +63,14 @@ export default function MonitoringDashboard({
   // 5. Скидання вибору
   const handleReset = () => {
     setSelectedStationId(null);
-    logger.debug("Скидання вибору станції на дашборді");
-    sendGAEvent({ event: 'dashboard_selection_reset' });
+    
+    // ТРЕКІНГ: Скидання фільтра
+    sendGAEvent({ 
+      event: 'filter_cleared',
+      filter_type: 'station_selection'
+    });
   };
 
-  // Fallback UI якщо дані критично відсутні
   if (!stations || stations.length === 0) {
     return (
       <div className="p-12 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center">
@@ -98,9 +107,9 @@ export default function MonitoringDashboard({
           )}
         </div>
         
-        {/* Компонент Мапи з інтегрованим вибором */}
+        {/* ЗМІНЕНО: Використовуємо MapWrapper замість Map */}
         <div className="relative group">
-           <Map 
+           <MapWrapper 
              stations={stations} 
              onStationSelect={handleStationSelect} 
              selectedId={selectedStationId} 
@@ -108,7 +117,7 @@ export default function MonitoringDashboard({
         </div>
       </section>
 
-      {/* СЕКЦІЯ ГРАФІКІВ (Контекстна заміна) */}
+      {/* СЕКЦІЯ ГРАФІКІВ */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="mb-6">
           <h2 className="text-2xl font-black text-slate-800 tracking-tight">
@@ -118,7 +127,6 @@ export default function MonitoringDashboard({
         </div>
 
         {selectedStation ? (
-          /* Відображаємо лінійний графік при виборі конкретної станції */
           <div className="grid grid-cols-1 gap-8">
             <PollutantChart 
               data={selectedMeasurements} 
@@ -135,7 +143,6 @@ export default function MonitoringDashboard({
             </div>
           </div>
         ) : (
-          /* Відображаємо порівняльні діаграми, якщо нічого не обрано */
           <div className="space-y-8">
             <HomeCharts stations={stations} globalStats={globalStats} />
           </div>

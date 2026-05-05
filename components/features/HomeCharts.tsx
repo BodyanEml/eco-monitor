@@ -1,15 +1,26 @@
 "use client";
 
+import { useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend 
 } from 'recharts';
+import { sendGAEvent } from '@next/third-parties/google';
 import { Station, AirQualityIndicators } from '@/types/environmental';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#64748b'];
 
 export default function HomeCharts({ stations, globalStats }: { stations: Station[], globalStats: AirQualityIndicators }) {
   
+  useEffect(() => {
+    // ТРЕКІНГ: Перегляд загальних дашборд-графіків
+    sendGAEvent({ 
+      event: 'chart_viewed', 
+      chart_type: 'overview_charts',
+      chart_title: 'Global Station Comparison'
+    });
+  }, []);
+
   const barData = stations.map((s, index) => ({
     name: s.name,
     pm25: index === 0 ? 12 : index === 1 ? 25 : 42, 

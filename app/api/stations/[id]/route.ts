@@ -18,7 +18,6 @@ export async function GET(
 
   try {
     // Рівень DEBUG: Логуємо початок обробки запиту
-    logger.debug({ requestId, stationId: id }, "API: Початок обробки запиту даних станції");
 
     // 2. Спроба отримати дані станції
     const station = await getStationById(id);
@@ -26,7 +25,6 @@ export async function GET(
     // Перевірка на існування (Частина 3.1: Обробка 404 на сервері)
     if (!station) {
       // Рівень WARN: Станція не знайдена (не критично, але важливо знати)
-      logger.warn({ requestId, stationId: id }, "API 404: Запитувану станцію не знайдено в базі");
       
       return NextResponse.json(
         { 
@@ -41,10 +39,6 @@ export async function GET(
     // 3. Спроба отримати заміри
     const measurements = await getMeasurements(id);
 
-    logger.info(
-      { requestId, stationId: id, measurementsCount: measurements.length }, 
-      "API 200: Дані станції та заміри успішно сформовано"
-    );
 
     // Повертаємо об'єднані дані
     return NextResponse.json({
@@ -56,13 +50,6 @@ export async function GET(
 
   } catch (error) {
     // Рівень ERROR: Критична помилка (Частина 3.2: Логування контексту помилки)
-    logger.error({ 
-      requestId,
-      stationId: id,
-      method: "GET",
-      error: error instanceof Error ? error.message : "Unknown System Error",
-      stack: error instanceof Error ? error.stack : undefined 
-    }, "API 500: Критичний збій сервера при обробці запиту");
 
     return NextResponse.json(
       { 

@@ -7,10 +7,7 @@ export async function GET() {
     const stations = await getStations();
     return NextResponse.json(stations);
   } catch (error) {
-    logger.error({ 
-      msg: "API Route Error", 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    });
+    console.log(error)
+    };
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
