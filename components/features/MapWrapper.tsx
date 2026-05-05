@@ -1,20 +1,27 @@
-"use client"; // Обов'язково!
+"use client";
 
 import dynamic from "next/dynamic";
 import { Station } from "@/types/environmental";
 
+// Відкладене завантаження карти з вимкненим SSR
 const Map = dynamic(() => import("./Map"), { 
   ssr: false,
   loading: () => (
-    <div className="h-[500px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center border border-slate-200">
+    <div className="h-[500px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center border border-slate-200 shadow-inner">
       <div className="text-center">
-        <div className="text-2xl mb-2">🌍</div>
-        <div className="text-slate-400 font-medium">Завантаження інтерактивної карти...</div>
+        <div className="text-4xl mb-3 animate-bounce">🌍</div>
+        <div className="text-slate-500 font-medium tracking-wide">Завантаження інтерактивної карти...</div>
       </div>
     </div>
   )
 });
 
-export default function MapWrapper({ stations }: { stations: Station[] }) {
-  return <Map stations={stations} />;
+interface MapWrapperProps {
+  stations: Station[];
+  onStationSelect?: (id: string) => void;
+  selectedId?: string | null;
+}
+
+export default function MapWrapper({ stations, onStationSelect, selectedId }: MapWrapperProps) {
+  return <Map stations={stations} onStationSelect={onStationSelect} selectedId={selectedId} />;
 }
